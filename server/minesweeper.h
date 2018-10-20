@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
-#include "../shared/message.h"
 
 
 /* Defines */

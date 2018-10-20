@@ -65,36 +65,50 @@ int revealTile(GameState* game, int x, int y)
 	// Reveal tile
 	game->tiles[x][y].isRevealed = true;
 	
-	// Recursively check neighbours if no adjacent mines
+	// Recursively check 8-neighbours if no adjacent mines
 	// Ignore return code
 	if (game->tiles[x][y].nAdjacentMines == 0){
 		// north
 		if( y > 0 )
 			revealTile(game, x, y-1);
 		
+		// northeast
+		if( y > 0 && x < N_TILES_X-1 )
+			revealTile(game, x+1, y-1);
+		
 		// east
 		if( x < N_TILES_X-1 )
 			revealTile(game, x+1, y);
+		
+		// southeast
+		if( x < N_TILES_X-1 && y < N_TILES_Y-1 )
+			revealTile(game, x+1, y+1);
 		
 		// south
 		if( y < N_TILES_Y-1 )
 			revealTile(game, x, y+1);
 		
+		// southwest
+		if( y < N_TILES_Y-1 && x > 0 )
+			revealTile(game, x-1, y+1);
+		
 		// west
 		if( x > 0 )
 			revealTile(game, x-1, y);
+		
+		// northwest
+		if( x > 0 && y > 0 )
+			revealTile(game, x-1, y-1);
 	}
 	
 	return SUCCESS; // No error
 }
 
 
-
-
 /* Public functions */
 /// requestReveal
 /// Requests a tile reveal
-Message* requestReveal(GameState* game, int x, int y)
+void requestReveal(GameState* game, int x, int y, char* reply)
 {
 	// Reveal tile
 	int err = revealTile(game, x, y);
@@ -118,19 +132,21 @@ Message* requestReveal(GameState* game, int x, int y)
 
 /// requestFlag
 /// Requests a flag placement
-Message* requestFlag(GameState* game, int x, int y)
+void requestFlag(GameState* game, int x, int y, char* reply)
 {
 	// Place flag
 	int err = placeFlag(game, x, y);
 	
 	// Tile revealed or flag aready placed
 	if (err == WARNING){
-		return;
+		return; // warn player the tile is already revealed
 	}
 	
 	// Check for successful flag on mine
 	if (err == SUCCESS){
 		--(game->remainingMines);
+		
+		// Notify correct flag placement
 		
 		// Win condition
 		if (game->remainingMines == 0) {
