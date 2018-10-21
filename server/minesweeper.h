@@ -1,4 +1,4 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * *
+/* * * * * * *                                                            * * * * * * * * * * * * * * * * * * * * *
  * server/minesweeper.h
  * Header for server-side minesweeper game code
  *
@@ -21,8 +21,8 @@
 #define N_TILES_Y 9
 #define N_MINES   10
 #define WARNING   -1
-#define ERROR     -2
-#define SUCCESS   0
+#define MINE_HIT  -2
+#define FLAGGED_MINE   1
 
 
 /* Types */
@@ -49,11 +49,22 @@ typedef struct
 
 
 /* Public function prototypes */
-/// Init a GameState 
+/// initGame
+/// Sets up a new GameState structure, including mine placement
+void initGame(GameState* game);
 
-/// Reveal Tile
 
-/// Place Flag
+/// requestReveal
+/// Requests a tile reveal
+/// Assumes reply has been cleared with "memset(reply, 0, sizeof(reply)/sizeof(char))"
+/// Assumes reply is large enough to host message for multiple tile reveals
+int requestReveal(GameState* game, int x, int y, char* reply);
+
+
+/// requestFlag
+/// Requests a flag placement
+/// Assumes reply has been cleared with "memset(reply, 0, sizeof(reply)/sizeof(char))"
+int requestFlag(GameState* game, int x, int y, char* reply);
 
 
 #endif

@@ -27,20 +27,20 @@ struct WinRecord_t
 	time_t time;
 	struct WinRecord_t* next;
 };
-typedef WinRecord_t WinRecord;
+typedef struct WinRecord_t WinRecord;
 
 
 /// UserRecord structure
 /// Linked list recording player name, win count, plays
 struct UserRecord_t
 {
-	char[MAX_NAME_LENGTH] name;
+	char name[MAX_NAME_LENGTH];
 	int plays;
 	int wins;
 	WinRecord* records;
 	struct UserRecord_t* next;
 };
-typedef UserRecord_t UserRecord;
+typedef struct UserRecord_t UserRecord;
 
 
 /* Public function prototypes */
@@ -57,3 +57,6 @@ int requestLeaderboard(char* reply);
 /// cleanupLeaderboard
 /// Safely deallocates entire list of user records, including win records
 void cleanupLeaderboard();
+
+
+#endif

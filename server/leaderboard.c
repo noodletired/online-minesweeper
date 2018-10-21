@@ -8,8 +8,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* Includes */
-#include <leaderboard.h>
+#include "leaderboard.h"
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 
 /* Defines */
@@ -35,6 +37,8 @@ UserRecord* newUser(const char* name)
 		current = current->next;
 	
 	current->next = user;
+
+	return user;
 }
 
 
@@ -90,8 +94,8 @@ void newRecord(const char* name, bool win, time_t time)
 	
 	// Generate a new win record
 	WinRecord* record = malloc(sizeof(WinRecord));
-	record.time = time;
-	record.next = NULL;
+	record->time = time;
+	record->next = NULL;
 	
 	updateUser(name, win, record);
 }
@@ -111,12 +115,12 @@ int requestLeaderboard(char* reply)
 		WinRecord* record = user->records;
 		while(record != NULL) {
 			// Format record
-			memset(&buffer, 0, sizeof(buffer)/sizeof(char));
-			sprintf(&buffer, "l,%s,%l,%d,%d,", user->name, record->time, user->wins, user->plays);
+			memset(buffer, 0, sizeof(buffer)/sizeof(char));
+			sprintf(buffer, "l,%s,%ld,%d,%d,", user->name, record->time, user->wins, user->plays);
 			replyLen += strlen(buffer);
 			
 			// Append record to the reply
-			strcat(reply, &buffer);
+			strcat(reply, buffer);
 			
 			record = record->next;
 		}
@@ -126,7 +130,7 @@ int requestLeaderboard(char* reply)
 	// Replace last , with 0
 	reply[replyLen] = 0;
 	
-	return len; // return size of reply
+	return replyLen; // return size of reply
 }
 
 
@@ -136,12 +140,12 @@ void cleanupLeaderboard()
 {
 	// Store pointers for the current user record and next 
 	UserRecord* currentUser = NULL;
-	UserRecord* nextUser = userData;
+	UserRecord* nextUser = userRecords;
 	
 	// Repeatedly shift next into current, and free current
 	while(nextUser != NULL) {
-		currentUser = next;
-		nextUser = current->next;
+		currentUser = nextUser;
+		nextUser = currentUser->next;
 		
 		// Do the same with each win record
 		WinRecord* currentWin = NULL;

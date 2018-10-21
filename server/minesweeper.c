@@ -14,6 +14,42 @@
 
 
 /* Private functions */
+/// tileIsMine
+/// Assumes (x < N_TILES_X) && (y < N_TILES_Y)
+/// Returns whether or not the game tile at (x, y) is a mine
+bool tileIsMine(GameState* game, int x, int y)
+{
+	return game->tiles[x][y].isMine;
+}
+
+
+/// tileIsRevealed
+/// Assumes (x < N_TILES_X) && (y < N_TILES_Y)
+/// Returns whether or not the game tile at (x, y) is revealed
+bool tileIsRevealed(GameState* game, int x, int y)
+{
+	return game->tiles[x][y].isRevealed;
+}
+
+
+/// tileIsFlagged
+/// Assumes (x < N_TILES_X) && (y < N_TILES_Y)
+/// Returns whether or not the game tile at (x, y) is revealed
+bool tileIsFlagged(GameState* game, int x, int y)
+{
+	return game->tiles[x][y].isFlagged;
+}
+
+
+/// tileAdjacentMines
+/// Assumes (x < N_TILES_X) && (y < N_TILES_Y)
+/// Returns the number of adjacent mines to tile at (x, y)
+int tileAdjacentMines(GameState* game, int x, int y)
+{
+	return game->tiles[x][y].nAdjacentMines;
+}
+
+
 /// placeMines
 /// Randomly sets N_MINES game tiles to be mines
 void placeMines(GameState* game)
@@ -62,33 +98,6 @@ void placeMines(GameState* game)
 		if( x > 0 && y > 0 )
 			game->tiles[x-1][y-1].nAdjacentMines++;
 	}
-}
-
-
-/// tileIsMine
-/// Assumes (x < N_TILES_X) && (y < N_TILES_Y)
-/// Returns whether or not the game tile at (x, y) is a mine
-bool tileIsMine(GameState* game, int x, int y)
-{
-	return game->tiles[x][y].isMine;
-}
-
-
-/// tileIsRevealed
-/// Assumes (x < N_TILES_X) && (y < N_TILES_Y)
-/// Returns whether or not the game tile at (x, y) is revealed
-bool tileIsRevealed(GameState* game, int x, int y)
-{
-	return game->tiles[x][y].isRevealed;
-}
-
-
-/// tileAdjacentMines
-/// Assumes (x < N_TILES_X) && (y < N_TILES_Y)
-/// Returns the number of adjacent mines to tile at (x, y)
-int tileAdjacentMines(GameState* game, int x, int y)
-{
-	return game->tiles[x][y].nAdjacentMines;
 }
 
 
@@ -145,8 +154,30 @@ int revealTile(GameState* game, int x, int y)
 			revealTile(game, x-1, y-1);
 	}
 	
-	return SUCCESS; // No error
+	// No error
+	return 0;
 }
+
+
+/// placeFlag
+/// Places flag at the specified position
+int placeFlag(GameState* game, int x, int y)
+{
+	// Check for flagged or revealed
+	if (tileIsFlagged(game, x, y) || tileIsRevealed(game, x, y))
+		return WARNING;
+	
+	// Flag tile
+	game->tiles[x][y].isFlagged = true;
+	
+	// Check for a successful mine coverage
+	if (tileIsMine(game, x, y))
+		return FLAGGED_MINE;
+	
+	// Flag placed but no hit
+	return 0;
+}
+
 
 
 /* Public functions */
@@ -156,7 +187,7 @@ void initGame(GameState* game)
 {
 	// Set defaults
 	game->isOver = false;
-	gmae->isWon = false;
+	game->isWon = false;
 	game->remainingMines = N_MINES;
 	game->startTime = time(0);
 	game->endTime = 0;
@@ -183,19 +214,19 @@ int requestReveal(GameState* game, int x, int y, char* reply)
 	GameState oldGame = *game;
 	
 	// Reveal tile
-	int err = revealTile(game, x, y, changes);
+	int err = revealTile(game, x, y);
 	
 	// Mine hit!
 	if (err == MINE_HIT){
 		game->isOver = true;
 		game->endTime = time(0);
-		return; // game over
+		return 0; // game over
 	}
 	
 	// Already revealed
 	if (err == WARNING){
 		sprintf(reply, "error");
-		return;
+		return 6;
 	}
 	
 	// Compose message of all newly revealed tiles
@@ -203,20 +234,22 @@ int requestReveal(GameState* game, int x, int y, char* reply)
 	char buffer[13]; // t,<x>,<y>,<n>,<flagged>,<mine>,
 	for (int i=0; i<N_TILES_X; i++) {
 		for (int j=0; j<N_TILES_Y; j++) {
-			if (!tileIsRevealed(oldGame,i,j) && tileIsRevealed(game,i,j)) {
+			if (!tileIsRevealed(&oldGame,i,j) && tileIsRevealed(game,i,j)) {
 				// Format tile data
-				memset(&buffer, 0, sizeof(buffer)/sizeof(char));
-				sprintf(&buffer, "t,%d,%d,%d,%d,%d,", i, j, tileAdjacentMines(game,i,j), tileIsFlagged(game,i,j), tileIsMine(game,i,j));
+				memset(buffer, 0, sizeof(buffer)/sizeof(char));
+				sprintf(buffer, "t,%d,%d,%d,%d,%d,", i, j, tileAdjacentMines(game,i,j), tileIsFlagged(game,i,j), tileIsMine(game,i,j));
 				replyLen += strlen(buffer);
 				
 				// Append to the reply
-				strcat(reply, &buffer);
+				strcat(reply, buffer);
 			}
 		}
 	}
 	
 	// Replace last , with 0
 	reply[replyLen] = 0;
+
+	return replyLen;
 }
 
 
@@ -231,11 +264,11 @@ int requestFlag(GameState* game, int x, int y, char* reply)
 	// Tile revealed or flag aready placed
 	if (err == WARNING){
 		sprintf(reply, "error");
-		return; // warn player the tile is already revealed
+		return 6; // warn player the tile is already revealed
 	}
 	
 	// Check for successful flag on mine
-	if (err == SUCCESS){
+	if (err == FLAGGED_MINE){
 		--(game->remainingMines);
 		
 		// Win condition
@@ -243,7 +276,7 @@ int requestFlag(GameState* game, int x, int y, char* reply)
 			game->isOver = true;
 			game->isWon  = true;
 			game->endTime = time(0);
-			return;
+			return 0;
 		}
 	}
 
