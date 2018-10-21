@@ -119,24 +119,16 @@ int main(int argc, char* argv[])
 	
 	// Run loop
 	while(!terminate) {
-		
-		// Handle new connection
-		accept(socketFd, (struct sockaddr *)&theirAddress, &sinSize))
-		if ((newFd =  {
-      if (!*closeProgram)
-      {
-        perror("accept");
-      }
-      continue;
+		// Block until new client connection
+		struct sockaddr_in cAddr;
+		int cID = accept(sID, (struct sockaddr*)&cAddr, &sInSize));
+		if (cID == -1) {
+			perror("Failed to accept connection!");
+			continue;
 		}
-
-		printf("Server: Got connection From %s\n", inet_ntoa(theirAddress.sin_addr));
+		printf("Server accepted connection from %s\n", inet_ntoa(cAddr.sin_addr));
 		
-			// Await request
-		
-			// Process request
-		
-			// Send response
+		// Add request for threaded processing
 	}
 
 	// Clean up

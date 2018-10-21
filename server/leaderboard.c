@@ -100,10 +100,7 @@ void newRecord(const char* name, bool win, time_t time)
 /// requestLeaderboard
 /// Requests the entire leaderboard in a message
 int requestLeaderboard(char* reply)
-{
-	// Clear reply
-	memset(reply, 0, sizeof(reply)/sizeof(char));
-	
+{	
 	int replyLen = 0;
 	char buffer[MAX_NAME_LENGTH+10+5+5+7]; // l,<name>,<time:long>,<wins:int>,<plays:int>
 	

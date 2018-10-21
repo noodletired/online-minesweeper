@@ -49,7 +49,7 @@ typedef struct
 
 
 /* Public function prototypes */
-/// Create a GameState 
+/// Init a GameState 
 
 /// Reveal Tile
 

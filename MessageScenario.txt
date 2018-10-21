@@ -1,0 +1,42 @@
+client	-> sends request
+server	-> "connect" or connection is closed
+client	-> send username
+client	-> send password
+server	-> "accept" or connection is closed
+loop:
+{ request leaderboard
+client	-> "lb"
+server	-> "l,<name>,<time>,<wins>,<plays>,l,...,l,..." for every leaderboard listing
+}
+
+{ request game
+client	-> "play"
+ loop:
+ { successfully reveal or flag tile
+ client	-> "r,<x>,<y>" or "f,<x>,<y>"
+ server -> "t,<x>,<y>,<flagged>,<mine>,t,...,t,..."
+ }
+
+ { reveals mine
+ client -> "r,<x>,<y>"
+ server -> "over,0,<time>"
+ server -> "t,<x>,<y>,0,<mine>,t,...," for every tile
+ break
+ }
+
+ { flags last mine
+ client -> "f,<x>,<y>"
+ server -> "over,1,<time>"
+ break
+ }
+
+ { quit game
+ client -> "quit"
+ server -> "accept"
+}
+
+{ exit
+client -> "exit"
+server -> connection is closed
+break
+}
