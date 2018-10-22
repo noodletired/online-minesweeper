@@ -1,6 +1,8 @@
 Minesweeper messages
 
 CLIENT => SERVER
+"user,pass"	-> authentication
+
 "play"		-> new minesweeper game
 "lb"		-> leaderboard data
 "exit"		-> disconnect
@@ -13,7 +15,6 @@ CLIENT => SERVER
 SERVER => CLIENT
 "connect"				-> connected to server successfully
 "accept"				-> good authentication, or generic request accepted (e.g. quit game)
-"reject"				-> bad authentication
 "t,<x>,<y>,<n>,<flagged>,<mine>"	-> tile data at (x, y): 'n' adjacent mines (0-8), flagged (1/0), ismine (1/0)
 "t,...,t,..."				-> multiple tiles
 "over,<win>,<time>"			-> game over, win or lose (1/0), time (long)

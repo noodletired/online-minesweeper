@@ -1,7 +1,6 @@
 client	-> sends request
 server	-> "connect" or connection is closed
-client	-> send username
-client	-> send password
+client	-> "<user>,<pass>"
 server	-> "accept" or connection is closed
 loop:
 { request leaderboard
@@ -33,6 +32,7 @@ client	-> "play"
  { quit game
  client -> "quit"
  server -> "accept"
+ }
 }
 
 { exit

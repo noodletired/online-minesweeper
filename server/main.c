@@ -18,12 +18,13 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "leaderboard.h"
+#include "comms.h"
 
 
 /* Defines */
 #define SEED 42
 #define DEFAULT_PORT 12345
-#define BACKLOG 10
 static volatile bool terminate = false;
 
 
@@ -34,73 +35,6 @@ void intHandler(int dummy)
 {
 	printf("%s", "\nSIGINT received!\n");
 	terminate = true;
-}
-
-
-/// openSocket
-/// Opens, binds and allows listening on a defined port
-int openSocket(int port)
-{
-	// Create socket
-	int sID = socket(AF_INET, SOCK_STREAM, 0);
-	if (sID == -1) {
-		perror("Failed to open socket");
-		exit(1); // error
-	}
-	
-	// Define endpoint
-	struct sockaddr_in sAddr;
-	memset(&sAddr, 0, sizeof(sAddr));
-	sAddr.sin_family = AF_INET;
-	sAddr.sin_port = htons(port);
-	sAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	
-	// Bind socket
-	int bErr = bind(sID, (struct sockaddr*)&sAddr, sizeof(sAddr));
-	if (bErr == -1) {
-		perror("Failed to bind socket");
-		exit(1); // error
-	}
-	
-	// Listen on socket
-	int lErr = listen(sID, BACKLOG);
-	if (lErr == -1) {
-		perror("Failed to listen on socket");
-		close(sID);
-		exit(1); // error
-	}
-	
-	printf("Server listening on port %d...\n", port);
-	return sID;
-}
-
-
-/// openSocket
-/// Safely shuts down and closes socket defined by sID
-void closeSocket(int sID)
-{
-	// Shutdown socket
-	int sErr = shutdown(sID, SHUT_RDWR);
-	if (sErr == -1) {
-		perror("Failed to shutdown socket");
-		return;
-	}
-
-	// Close socket
-	int cErr = close(sID);
-	if (cErr == -1) {
-		perror("Failed to close socket");
-		return;
-	}
-	
-	printf("Server disconnected safely...\n");
-}
-
-
-/// authUser
-int authUser()
-{
-	return 0;
 }
 
 
@@ -119,7 +53,7 @@ int main(int argc, char* argv[])
 	signal(SIGPIPE, SIG_IGN);
 	
 	// Initialise threadpool
-	//initThreadpool(NUM_THREADS);
+	initThreadpool();
 	
 	// Set port from args
 	int port = DEFAULT_PORT;
@@ -132,7 +66,7 @@ int main(int argc, char* argv[])
 	int sID = openSocket(port);
 	
 	// Run loop
-	while(!terminate) {
+	while (!terminate) {
 		// Block until new client connection
 		struct sockaddr_in cAddr;
 		int cID = accept(sID, (struct sockaddr*)&cAddr, &sInSize);
@@ -143,10 +77,14 @@ int main(int argc, char* argv[])
 		printf("Server accepted connection from %s\n", inet_ntoa(cAddr.sin_addr));
 		
 		// Add request for threaded processing
+		newRequest(handleConnection, cID);
 	}
 
 	// Clean up
 	closeSocket(sID);
+	destroyThreadpool();
+	cleanupLeaderboard();
+	printf("Server exited safely.\n");
 	
 	return 0;
 }

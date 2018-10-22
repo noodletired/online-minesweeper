@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * server/leaderboard.h
- * Header for server-side minesweeper game code
+ * Header for server-side minesweeper leaderboard
  *
  * Author:  Keagan Godfrey
  * Version: 1.0
@@ -13,10 +13,7 @@
 /* Includes */
 #include <stdbool.h>
 #include <time.h>
-
-
-/* Defines */
-#define MAX_NAME_LENGTH 20
+#include "comms.h" // for MAX_NAME_LENGTH
 
 
 /* Types */

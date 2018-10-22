@@ -23,8 +23,14 @@ static UserRecord* userRecords = NULL;
 /// Creates a new user and pushes to end of user records
 UserRecord* newUser(const char* name)
 {
-	// Allocate memory
+	// Allocate memory for new user
 	UserRecord* user = malloc(sizeof(UserRecord));
+	if (!user) {
+        perror("Out of memory in newUser");
+        exit(1);
+    }
+	
+	// Fill data
 	strcpy(user->name, name);
 	user->records = NULL;
 	user->wins = 0;
@@ -92,8 +98,13 @@ void newRecord(const char* name, bool win, time_t time)
 		return;
 	}
 	
-	// Generate a new win record
+	// Allocate memory for new record
 	WinRecord* record = malloc(sizeof(WinRecord));
+	if (!record) {
+        perror("Out of memory in newRecord");
+        exit(1);
+    }
+	
 	record->time = time;
 	record->next = NULL;
 	

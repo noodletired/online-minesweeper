@@ -67,35 +67,35 @@ void placeMines(GameState* game)
 		
 		// Increment nAdjacentMines on 8 neighbours
 		// north
-		if( y > 0 )
+		if ( y > 0 )
 			game->tiles[x][y-1].nAdjacentMines++;
 		
 		// northeast
-		if( y > 0 && x < N_TILES_X-1 )
+		if ( y > 0 && x < N_TILES_X-1 )
 			game->tiles[x+1][y-1].nAdjacentMines++;
 		
 		// east
-		if( x < N_TILES_X-1 )
+		if ( x < N_TILES_X-1 )
 			game->tiles[x+1][y].nAdjacentMines++;
 		
 		// southeast
-		if( x < N_TILES_X-1 && y < N_TILES_Y-1 )
+		if ( x < N_TILES_X-1 && y < N_TILES_Y-1 )
 			game->tiles[x+1][y+1].nAdjacentMines++;
 		
 		// south
-		if( y < N_TILES_Y-1 )
+		if ( y < N_TILES_Y-1 )
 			game->tiles[x][y+1].nAdjacentMines++;
 		
 		// southwest
-		if( y < N_TILES_Y-1 && x > 0 )
+		if ( y < N_TILES_Y-1 && x > 0 )
 			game->tiles[x-1][y+1].nAdjacentMines++;
 		
 		// west
-		if( x > 0 )
+		if ( x > 0 )
 			game->tiles[x-1][y].nAdjacentMines++;
 		
 		// northwest
-		if( x > 0 && y > 0 )
+		if ( x > 0 && y > 0 )
 			game->tiles[x-1][y-1].nAdjacentMines++;
 	}
 }
@@ -122,35 +122,35 @@ int revealTile(GameState* game, int x, int y)
 	// Ignore return code
 	if (game->tiles[x][y].nAdjacentMines == 0){
 		// north
-		if( y > 0 )
+		if ( y > 0 )
 			revealTile(game, x, y-1);
 		
 		// northeast
-		if( y > 0 && x < N_TILES_X-1 )
+		if ( y > 0 && x < N_TILES_X-1 )
 			revealTile(game, x+1, y-1);
 		
 		// east
-		if( x < N_TILES_X-1 )
+		if ( x < N_TILES_X-1 )
 			revealTile(game, x+1, y);
 		
 		// southeast
-		if( x < N_TILES_X-1 && y < N_TILES_Y-1 )
+		if ( x < N_TILES_X-1 && y < N_TILES_Y-1 )
 			revealTile(game, x+1, y+1);
 		
 		// south
-		if( y < N_TILES_Y-1 )
+		if ( y < N_TILES_Y-1 )
 			revealTile(game, x, y+1);
 		
 		// southwest
-		if( y < N_TILES_Y-1 && x > 0 )
+		if ( y < N_TILES_Y-1 && x > 0 )
 			revealTile(game, x-1, y+1);
 		
 		// west
-		if( x > 0 )
+		if ( x > 0 )
 			revealTile(game, x-1, y);
 		
 		// northwest
-		if( x > 0 && y > 0 )
+		if ( x > 0 && y > 0 )
 			revealTile(game, x-1, y-1);
 	}
 	
