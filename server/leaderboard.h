@@ -21,7 +21,7 @@
 /// Linked list recording time to win
 struct WinRecord_t
 {
-	time_t time;
+	long int time;
 	struct WinRecord_t* next;
 };
 typedef struct WinRecord_t WinRecord;
@@ -43,7 +43,7 @@ typedef struct UserRecord_t UserRecord;
 /* Public function prototypes */
 /// newRecord
 /// Adds a new user record
-void newRecord(const char* name, bool win, time_t time);
+void newRecord(const char* name, bool win, long int time);
 
 
 /// requestLeaderboard

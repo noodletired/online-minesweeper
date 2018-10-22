@@ -90,7 +90,7 @@ void updateUser(const char* name, bool win, WinRecord* record)
 /* Public functions */
 /// newRecord
 /// Adds a new record to the end of the list
-void newRecord(const char* name, bool win, time_t time)
+void newRecord(const char* name, bool win, long int time)
 {
 	// First check if loss
 	if (!win) {

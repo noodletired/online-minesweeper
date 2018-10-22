@@ -2,6 +2,7 @@ Minesweeper messages
 
 CLIENT => SERVER
 "user,pass"	-> authentication
+"ok"		-> acknowledgement
 
 "play"		-> new minesweeper game
 "lb"		-> leaderboard data

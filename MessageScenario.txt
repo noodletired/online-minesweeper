@@ -10,6 +10,7 @@ server	-> "l,<name>,<time>,<wins>,<plays>,l,...,l,..." for every leaderboard lis
 
 { request game
 client	-> "play"
+ server -> "accept"
  loop:
  { successfully reveal or flag tile
  client	-> "r,<x>,<y>" or "f,<x>,<y>"
@@ -19,6 +20,7 @@ client	-> "play"
  { reveals mine
  client -> "r,<x>,<y>"
  server -> "over,0,<time>"
+ client -> "ok"
  server -> "t,<x>,<y>,0,<mine>,t,...," for every tile
  break
  }
