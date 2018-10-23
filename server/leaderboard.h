@@ -19,25 +19,23 @@
 /* Types */
 /// WinRecord structure
 /// Linked list recording time to win
-struct WinRecord_t
+typedef struct WinRecord
 {
 	long int time;
-	struct WinRecord_t* next;
-};
-typedef struct WinRecord_t WinRecord;
+	struct WinRecord* next;
+} WinRecord;
 
 
 /// UserRecord structure
 /// Linked list recording player name, win count, plays
-struct UserRecord_t
+typedef struct UserRecord
 {
 	char name[MAX_NAME_LENGTH];
 	int plays;
 	int wins;
 	WinRecord* records;
-	struct UserRecord_t* next;
-};
-typedef struct UserRecord_t UserRecord;
+	struct UserRecord* next;
+} UserRecord;
 
 
 /* Public function prototypes */

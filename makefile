@@ -3,7 +3,7 @@ INCS = -I server/
 CC = gcc
 OPTIONS = -g -Wall
 SERVER_BUILD = server_build
-SERVER_OBJS = server/main.o server/minesweeper.o server/leaderboard.o
+SERVER_OBJS = server/main.o server/minesweeper.o server/leaderboard.o server/threadpool.o server/comms.o
 
 default: clean $(server_name) $(client_name)
 all: default

@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * server/minesweeper.c
  * Server-side minesweeper game code
@@ -11,6 +13,11 @@
 #include "minesweeper.h"
 #include <string.h>
 #include <stdio.h>
+#include <pthread.h>
+
+
+/* Defines */
+static pthread_mutex_t randLock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP; // mutex lock for rand() calls
 
 
 /* Private functions */
@@ -52,8 +59,12 @@ int tileAdjacentMines(GameState* game, int x, int y)
 
 /// placeMines
 /// Randomly sets N_MINES game tiles to be mines
+/// Requires synchronisation, since rand() is not thread safe
 void placeMines(GameState* game)
 {
+	// Lock
+    int err = pthread_mutex_lock(&randLock);
+	
 	for (int i=0; i<N_MINES; i++) {
 		int x, y;
 		do
@@ -98,6 +109,9 @@ void placeMines(GameState* game)
 		if ( x > 0 && y > 0 )
 			game->tiles[x-1][y-1].nAdjacentMines++;
 	}
+	
+	// Unlock
+    err = pthread_mutex_unlock(&randLock);
 }
 
 
@@ -247,7 +261,7 @@ int requestReveal(GameState* game, int x, int y, char* reply)
 	}
 	
 	// Replace last , with 0
-	reply[replyLen] = 0;
+	reply[replyLen-1] = 0;
 
 	return replyLen;
 }
@@ -283,4 +297,32 @@ int requestFlag(GameState* game, int x, int y, char* reply)
 	// Compose message indicating flagged tile
 	sprintf(reply, "t,%d,%d,-1,1,%d", x, y, tileIsMine(game, x, y));
 	return strlen(reply);
+}
+
+
+/// requestAllTiles
+/// Requests every tile be revealed
+/// Assumes reply has been cleared with "memset(reply, 0, sizeof(reply)/sizeof(char))"
+/// Assumes reply is large enough to host message for multiple tile reveals
+int requestAllTiles(GameState* game, char* reply)
+{
+	// Compose message of all revealed tiles
+	int replyLen = 0;
+	char buffer[13]; // t,<x>,<y>,<n>,<flagged>,<mine>,
+	for (int i=0; i<N_TILES_X; i++) {
+		for (int j=0; j<N_TILES_Y; j++) {
+			// Format tile data
+			memset(buffer, 0, sizeof(buffer)/sizeof(char));
+			sprintf(buffer, "t,%d,%d,%d,%d,%d,", i, j, tileAdjacentMines(game,i,j), tileIsFlagged(game,i,j), tileIsMine(game,i,j));
+			replyLen += strlen(buffer);
+			
+			// Append to the reply
+			strcat(reply, buffer);
+		}
+	}
+	
+	// Replace last , with 0
+	reply[replyLen-1] = 0;
+
+	return replyLen;
 }

@@ -153,6 +153,7 @@ void handleConnection(int cID)
 	
 	// Keep receiving until user disconnects
 	bool exit = false;
+	int txLen;
 	while (!exit) {
 		// Receive a menu option, "play", "lb" or "exit"
 		if (recv(cID, rxBuffer, MAX_RX_SIZE, 0) <= 0) {
@@ -161,7 +162,7 @@ void handleConnection(int cID)
 		}
 	
 		// Parse menu option
-		switch parseMenuOption(rxBuffer):
+		switch (parseMenuOption(rxBuffer)) {
 			case PLAY:
 				// Accept game start
 				if (send(cID, "accept", 7, 0)) {
@@ -171,8 +172,9 @@ void handleConnection(int cID)
 				}
 			
 				// Enter game loop
-				GameState game; initGame(&game);
-				while (!game->isOver) {
+				GameState game;
+				initGame(&game);
+				while (!game.isOver) {
 					// Receive game option
 					if (recv(cID, rxBuffer, MAX_RX_SIZE, 0) <= 0) {
 						perror("Failed to receive data");
@@ -181,50 +183,51 @@ void handleConnection(int cID)
 					}
 					
 					// Parse game option
-					int x, int y;
-					switch parseGameOption(rxBuffer, &x, &y):
+					int x, y;
+					switch (parseGameOption(rxBuffer, &x, &y)) {
 						case REVEAL:
-							int txLen = requestReveal(&game, x, y, txBuffer);
+							txLen = requestReveal(&game, x, y, txBuffer);
 							// Mine hit!
 							if (txLen == 0) {
 								// Store new record and set transmit message
-								long int gameTime = (long int)difftime(game->endTime, game->startTime);
+								long int gameTime = (long int)difftime(game.endTime, game.startTime);
 								newRecord(user, false, gameTime);
 								sprintf(txBuffer, "over,0,%ld", gameTime);
 								txLen = strlen(txBuffer);
 								
 								// Send message
 								if (send(cID, txBuffer, txLen, 0) == -1) {
-									perror("Failed to send data (reveal game tile)");
-									game->isOver = true;
+									perror("Failed to send data (game over)");
+									game.isOver = true;
 									exit = true;
 								}
 								
 								// Wait for OK
 								if (recv(cID, rxBuffer, MAX_RX_SIZE, 0) <= 0) {
 									perror("Failed to receive data");
+									game.isOver = true;
 									exit = true;
 									break;
 								}
 								
-								// TODO:
-								// Send ALL tiles
+								// Send all tiles
+								txLen = requestAllTiles(&game, txBuffer);
 							}
 							
 							// Send reply
-							else if (send(cID, txBuffer, txLen, 0) == -1) {
+							if (send(cID, txBuffer, txLen, 0) == -1) {
 								perror("Failed to send data (reveal game tile)");
-								game->isOver = true;
+								game.isOver = true;
 								exit = true;
 							}
 							break;
 						
 						case FLAG:
-							int txLen = requestFlag(&game, x, y, txBuffer);
+							txLen = requestFlag(&game, x, y, txBuffer);
 							// Game won!
 							if (txLen == 0) {
 								// Store new record and set transmit message
-								long int gameTime = (long int)difftime(game->endTime, game->startTime);
+								long int gameTime = (long int)difftime(game.endTime, game.startTime);
 								newRecord(user, true, gameTime);
 								sprintf(txBuffer, "over,1,%ld", gameTime);
 								txLen = strlen(txBuffer);
@@ -233,22 +236,29 @@ void handleConnection(int cID)
 							// Send reply
 							if (send(cID, txBuffer, txLen, 0) == -1) {
 								perror("Failed to send data (flag game tile)");
-								game->isOver = true;
+								game.isOver = true;
 								exit = true;
 							}
 							break;
 							
 						case QUIT:
 						default:
-							// End game abruptly
-							game->isOver = true;
+							// Set game over
+							game.isOver = true;
+							
+							// Accept game quit
+							if (send(cID, "accept", 7, 0)) {
+								perror("Failed to send data (accept game quit)");
+								exit = true;
+							}
 							break;
+					}
 				}
 				break;
 				
 			case LB:
 				// Display leaderboard
-				int txLen = requestLeaderboard(txBuffer);
+				txLen = requestLeaderboard(txBuffer);
 				if (txLen == 0) {
 					// No leaderboard data
 					if (send(cID, "error", 6, 0) == -1) {
@@ -266,6 +276,7 @@ void handleConnection(int cID)
 			default:
 				exit = true;
 				break;
+		}
 	}
 	
 	// User has exitied, or something went wrong

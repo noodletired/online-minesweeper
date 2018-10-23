@@ -67,4 +67,11 @@ int requestReveal(GameState* game, int x, int y, char* reply);
 int requestFlag(GameState* game, int x, int y, char* reply);
 
 
+/// requestAllTiles
+/// Requests every tile be revealed
+/// Assumes reply has been cleared with "memset(reply, 0, sizeof(reply)/sizeof(char))"
+/// Assumes reply is large enough to host message for multiple tile reveals
+int requestAllTiles(GameState* game, char* reply);
+
+
 #endif

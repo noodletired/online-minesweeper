@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * server/leaderboard.c
  * Minesweeper server leaderboard
@@ -12,10 +14,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
 
 
 /* Defines */
 static UserRecord* userRecords = NULL;
+static pthread_mutex_t lbLock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP; // mutex lock for leaderboard access
 
 
 /* Private functions */
@@ -92,6 +96,9 @@ void updateUser(const char* name, bool win, WinRecord* record)
 /// Adds a new record to the end of the list
 void newRecord(const char* name, bool win, long int time)
 {
+	// Lock
+	int err = pthread_mutex_lock(&lbLock);
+	
 	// First check if loss
 	if (!win) {
 		updateUser(name, win, NULL);
@@ -101,14 +108,17 @@ void newRecord(const char* name, bool win, long int time)
 	// Allocate memory for new record
 	WinRecord* record = malloc(sizeof(WinRecord));
 	if (!record) {
-        perror("Out of memory in newRecord");
-        exit(1);
-    }
+		perror("Out of memory in newRecord");
+		exit(1);
+	}
 	
 	record->time = time;
 	record->next = NULL;
 	
 	updateUser(name, win, record);
+	
+	// Unlock
+	err = pthread_mutex_unlock(&lbLock);
 }
 
 
@@ -116,6 +126,9 @@ void newRecord(const char* name, bool win, long int time)
 /// Requests the entire leaderboard in a message
 int requestLeaderboard(char* reply)
 {	
+	// Lock
+	int err = pthread_mutex_lock(&lbLock);
+	
 	int replyLen = 0;
 	char buffer[MAX_NAME_LENGTH+10+5+5+7]; // l,<name>,<time:long>,<wins:int>,<plays:int>
 	
@@ -137,6 +150,9 @@ int requestLeaderboard(char* reply)
 		}
 		user = user->next;
 	}
+	
+	// Unlock
+	err = pthread_mutex_unlock(&lbLock);
 	
 	// Replace last , with 0
 	reply[replyLen] = 0;

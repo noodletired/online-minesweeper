@@ -23,12 +23,11 @@
 /* Types */
 /// Request structure
 /// Linked list
-struct Request_t {
+typedef struct Request {
     void (*callback)(int);
 	int data;
-    struct Request_t* next;
-};
-typedef struct Request_t Request;
+    struct Request* next;
+} Request;
 
 
 /* Public function prototypes */

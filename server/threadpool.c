@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * server/threadpool.c
  * Minesweeper server main entrypoint
@@ -11,10 +13,11 @@
 /* Includes */
 #include "threadpool.h"
 #include <stdlib.h> 
+#include <stdio.h> 
 #include <pthread.h>
 
 
-/* Private data */
+/* Defines */
 static pthread_t pool[NUM_THREADS];
 static int thrID[NUM_THREADS];
 
@@ -34,22 +37,22 @@ Request* getRequest()
     Request* request = NULL;
 
     // Lock reqLock
-    err = pthread_mutex_lock(reqLock);
+    err = pthread_mutex_lock(&reqLock);
 
     if (nRequests > 0) {
         request = requests;
-        requests = a_request->next;
+        requests = request->next;
 		
 		// This was the last request
         if (requests == NULL) {
-            last_request = NULL;
+            lastRequest = NULL;
         }
 		
-        num_requests--;
+        nRequests--;
     }
 
     // Unlock reqLock
-    err = pthread_mutex_unlock(reqLock);
+    err = pthread_mutex_unlock(&reqLock);
 
     return request;
 }
@@ -64,10 +67,10 @@ void* handleRequests(void* data)
     Request* request;
 
     // Lock reqLock
-    err = pthread_mutex_lock(reqLock);
+    err = pthread_mutex_lock(&reqLock);
 
     while(1) {
-        if (numRequests > 0) {
+        if (nRequests > 0) {
             request = getRequest();
             if (request) {
                 // Notify we are handling request
@@ -116,7 +119,7 @@ void newRequest(void (*callback)(int), int data)
     request->next = NULL;
 
     // Lock reqLock
-    err = pthread_mutex_lock(reqLock);
+    err = pthread_mutex_lock(&reqLock);
 
     // Add new request to end of list
     if (nRequests == 0) { // list is empty
@@ -132,10 +135,10 @@ void newRequest(void (*callback)(int), int data)
     nRequests++;
 
     // Unlock reqLock
-    err = pthread_mutex_unlock(reqLock);
+    err = pthread_mutex_unlock(&reqLock);
 
     // Signal the condition variable
-    err = pthread_cond_signal(reqReady);
+    err = pthread_cond_signal(&reqReady);
 }
 
 
