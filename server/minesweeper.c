@@ -296,6 +296,7 @@ int requestFlag(GameState* game, int x, int y, char* reply)
 
 	// Compose message indicating flagged tile
 	sprintf(reply, "t,%d,%d,-1,1,%d", x, y, tileIsMine(game, x, y));
+	reply[12] = 0;
 	return strlen(reply);
 }
 

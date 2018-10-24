@@ -43,10 +43,18 @@ UserRecord* newUser(const char* name)
 	
 	// Add to userRecords list
 	UserRecord* current = userRecords;
-	while(current != NULL )
-		current = current->next;
-	
-	current->next = user;
+	if (current == NULL) {
+		userRecords = user;
+	}
+	else {
+		while(current->next != NULL)
+			current = current->next;
+		current->next = user;
+	}
+
+	// Success
+	printf("Successfully created new user.\n");
+	fflush(stdout);
 
 	return user;
 }

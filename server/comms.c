@@ -28,7 +28,10 @@
 int authUser(const char* message, char* user, char* pass)
 {
 	// Get username and password from message
-	if (sscanf(message, "%s,%s", user, pass) != 2) {
+	if (sscanf(message, "%[^,\n],%[^,\n]", user, pass) != 2) {
+		printf("Received: %d results, user %s, pass %s\n",
+               sscanf(message, "%[^,\n],%[^,\n]", user, pass),
+               user, pass);
 		printf("%s", "Invalid user/pass format!\n");
 		fflush(stdout);
 		return -1;
@@ -87,13 +90,18 @@ MenuOption parseMenuOption(const char* buffer)
 GameOption parseGameOption(const char* buffer, int* x, int* y)
 {
 	// Check string matches
-	if (strncmp(buffer, "quit", 4) == 0)
+	if (strncmp(buffer, "quit", 4) == 0) {
+		printf("%s", "Quitting game...\n");
+		fflush(stdout);
 		return QUIT;
+	}
 	else if (strncmp(buffer, "r", 1) == 0) {
 		if( sscanf(buffer, "r,%d,%d", x, y) != 2) {
 			printf("%s", "Invalid reveal format! Expects 'r,<x>,<y>'.\n");
 			fflush(stdout);
 		}
+		printf("Revealing tile %d,%d...\n", *x, *y);
+		fflush(stdout);
 		return REVEAL;
 	}
 	else if (strncmp(buffer, "f", 1) == 0) {
@@ -101,6 +109,8 @@ GameOption parseGameOption(const char* buffer, int* x, int* y)
 			printf("%s", "Invalid flag format! Expects 'f,<x>,<y>'.\n");
 			fflush(stdout);
 		}
+		printf("Flagging tile %d,%d...\n", *x, *y);
+		fflush(stdout);
 		return FLAG;
 	}
 
@@ -141,7 +151,7 @@ void handleConnection(int cID)
 	
 	//Authenticate user
 	if(authUser(rxBuffer, user, pass) == 0) {
-		if (send(cID, "accept", 7, 0)) {
+		if (send(cID, "accept", 7, 0) == -1) {
 			perror("Failed to send data (accept user auth)");
 			closeSocket(cID);
 			return;
@@ -165,7 +175,7 @@ void handleConnection(int cID)
 		switch (parseMenuOption(rxBuffer)) {
 			case PLAY:
 				// Accept game start
-				if (send(cID, "accept", 7, 0)) {
+				if (send(cID, "accept", 7, 0) == -1) {
 					perror("Failed to send data (accept game start)");
 					exit = true;
 					break;
@@ -186,9 +196,15 @@ void handleConnection(int cID)
 					int x, y;
 					switch (parseGameOption(rxBuffer, &x, &y)) {
 						case REVEAL:
+							txBuffer[0] = '\0';
 							txLen = requestReveal(&game, x, y, txBuffer);
+
 							// Mine hit!
 							if (txLen == 0) {
+								// Notify
+								printf("Mine hit at %d,%d\n", x, y);
+								fflush(stdout);
+
 								// Store new record and set transmit message
 								long int gameTime = (long int)difftime(game.endTime, game.startTime);
 								newRecord(user, false, gameTime);
@@ -211,6 +227,7 @@ void handleConnection(int cID)
 								}
 								
 								// Send all tiles
+								txBuffer[0] = '\0';
 								txLen = requestAllTiles(&game, txBuffer);
 							}
 							
@@ -223,6 +240,7 @@ void handleConnection(int cID)
 							break;
 						
 						case FLAG:
+							txBuffer[0] = '\0';
 							txLen = requestFlag(&game, x, y, txBuffer);
 							// Game won!
 							if (txLen == 0) {
@@ -247,7 +265,7 @@ void handleConnection(int cID)
 							game.isOver = true;
 							
 							// Accept game quit
-							if (send(cID, "accept", 7, 0)) {
+							if (send(cID, "accept", 7, 0) == -1) {
 								perror("Failed to send data (accept game quit)");
 								exit = true;
 							}

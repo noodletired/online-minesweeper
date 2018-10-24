@@ -12,7 +12,7 @@
 
 
 /* Defines */
-#define MAX_RX_SIZE 10
+#define MAX_RX_SIZE 50
 #define MAX_TX_SIZE 1000
 #define MAX_NAME_LENGTH 20
 #define BACKLOG 10

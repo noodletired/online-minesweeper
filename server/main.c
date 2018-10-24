@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "leaderboard.h"
+#include "threadpool.h"
 #include "comms.h"
 
 
@@ -57,7 +58,7 @@ int main(int argc, char* argv[])
 	
 	// Set port from args
 	int port = DEFAULT_PORT;
-	if (argc > 1 && atoi(argv[1]) < 1) {
+	if (argc > 1 && atoi(argv[1]) > 0) {
 		port = atoi(argv[1]);
 	}
 	
