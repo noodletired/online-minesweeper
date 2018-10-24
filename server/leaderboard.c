@@ -19,6 +19,8 @@
 
 /* Defines */
 static UserRecord* userRecords = NULL;
+static int readCounter = 0;
+static pthread_mutex_t rcLock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP; // mutex lock for read counter
 static pthread_mutex_t lbLock = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP; // mutex lock for leaderboard access
 
 
@@ -134,8 +136,15 @@ void newRecord(const char* name, bool win, long int time)
 /// Requests the entire leaderboard in a message
 int requestLeaderboard(char* reply)
 {	
-	// Lock
-	int err = pthread_mutex_lock(&lbLock);
+	// Wait for reader lock
+	int err = pthread_mutex_lock(&rcLock);
+	readCounter++;
+	
+	// First reader must wait for and lock leaderboard, then unlock reader lock
+	if (readCounter == 1)
+		err = pthread_mutex_lock(&lbLock);
+	err = pthread_mutex_unlock(&rcLock)
+		
 	
 	int replyLen = 0;
 	char buffer[MAX_NAME_LENGTH+10+5+5+7]; // l,<name>,<time:long>,<wins:int>,<plays:int>
@@ -159,8 +168,14 @@ int requestLeaderboard(char* reply)
 		user = user->next;
 	}
 	
-	// Unlock
-	err = pthread_mutex_unlock(&lbLock);
+	// Wait for reader lock
+	err = pthread_mutex_lock(&rcLock);
+	readCounter--;
+	
+	// Last reader must unlock leaderboard
+	if (readCounter == 0)
+		err = pthread_mutex_unlock(&lbLock);
+	err = pthread_mutex_unlock(&rcLock)
 	
 	// Replace last , with 0
 	reply[replyLen] = 0;
