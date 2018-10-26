@@ -33,11 +33,10 @@ struct Request* lastRequest = NULL;
 /// Gets the first pending request from the requests list
 Request* getRequest()
 {
-    int err; // error variable for pthread functions
     Request* request = NULL;
 
     // Lock reqLock
-    err = pthread_mutex_lock(&reqLock);
+    pthread_mutex_lock(&reqLock);
 
     if (nRequests > 0) {
         request = requests;
@@ -52,7 +51,7 @@ Request* getRequest()
     }
 
     // Unlock reqLock
-    err = pthread_mutex_unlock(&reqLock);
+    pthread_mutex_unlock(&reqLock);
 
     return request;
 }
@@ -62,12 +61,11 @@ Request* getRequest()
 /// A function used by threads to pull new requests as they are made
 void* handleRequests(void* data)
 {
-    int err;
     int threadId = *((int*)data);
     Request* request;
 
     // Lock reqLock
-    err = pthread_mutex_lock(&reqLock);
+    pthread_mutex_lock(&reqLock);
 
     while(1) {
         if (nRequests > 0) {
@@ -77,7 +75,7 @@ void* handleRequests(void* data)
 				printf("Thread %d handling request...\n", threadId);
 				
 				// Unlock reqLock while we handle ours
-                err = pthread_mutex_unlock(&reqLock);
+                pthread_mutex_unlock(&reqLock);
 				
 				// Run request callback, then free request
                 (*request->callback)(request->data);
@@ -90,12 +88,12 @@ void* handleRequests(void* data)
 				pthread_testcancel();
 				
                 // Lock the mutex again
-                err = pthread_mutex_lock(&reqLock);
+                pthread_mutex_lock(&reqLock);
             }
         }
         else {
 			// Wait for request to become available
-			err = pthread_cond_wait(&reqReady, &reqLock);
+			pthread_cond_wait(&reqReady, &reqLock);
         }
     }
 }
@@ -106,8 +104,6 @@ void* handleRequests(void* data)
 /// Adds a request to the requests list
 void newRequest(void (*callback)(int), int data)
 {
-    int err; // error variable for pthread functions
-
     // Allocate memory for request
     Request* request = malloc(sizeof(Request));
 	if (!request) {
@@ -119,7 +115,7 @@ void newRequest(void (*callback)(int), int data)
     request->next = NULL;
 
     // Lock reqLock
-    err = pthread_mutex_lock(&reqLock);
+    pthread_mutex_lock(&reqLock);
 
     // Add new request to end of list
     if (nRequests == 0) { // list is empty
@@ -135,10 +131,10 @@ void newRequest(void (*callback)(int), int data)
     nRequests++;
 
     // Unlock reqLock
-    err = pthread_mutex_unlock(&reqLock);
+    pthread_mutex_unlock(&reqLock);
 
     // Signal the condition variable
-    err = pthread_cond_signal(&reqReady);
+    pthread_cond_signal(&reqReady);
 }
 
 

@@ -20,7 +20,7 @@
 
 /* Types */
 typedef enum {EXIT, PLAY, LB} MenuOption;
-typedef enum {QUIT, REVEAL, FLAG} GameOption;
+typedef enum {QUIT, REVEAL, FLAG, WINHACK} GameOption;
 
 
 /* Public function prototypes */

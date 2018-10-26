@@ -63,7 +63,7 @@ int tileAdjacentMines(GameState* game, int x, int y)
 void placeMines(GameState* game)
 {
 	// Lock
-    int err = pthread_mutex_lock(&randLock);
+    pthread_mutex_lock(&randLock);
 	
 	for (int i=0; i<N_MINES; i++) {
 		int x, y;
@@ -111,7 +111,7 @@ void placeMines(GameState* game)
 	}
 	
 	// Unlock
-    err = pthread_mutex_unlock(&randLock);
+    pthread_mutex_unlock(&randLock);
 }
 
 
@@ -295,7 +295,7 @@ int requestFlag(GameState* game, int x, int y, char* reply)
 	}
 
 	// Compose message indicating flagged tile
-	sprintf(reply, "t,%d,%d,-1,1,%d", x, y, tileIsMine(game, x, y));
+	sprintf(reply, "t,%d,%d,9,1,%d", x, y, tileIsMine(game, x, y)); // note impossible 9 adjacent mines
 	reply[12] = 0;
 	return strlen(reply);
 }
@@ -327,3 +327,14 @@ int requestAllTiles(GameState* game, char* reply)
 
 	return replyLen;
 }
+
+
+/// forceWin
+/// Triggers a game won response (hack, or play-testing)
+void forceWin(GameState* game)
+{
+	game->isOver = true;
+	game->isWon  = true;
+	game->endTime = time(0);
+}
+

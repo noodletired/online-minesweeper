@@ -74,4 +74,8 @@ int requestFlag(GameState* game, int x, int y, char* reply);
 int requestAllTiles(GameState* game, char* reply);
 
 
+/// forceWin
+/// Triggers a game won response (hack, or play-testing)
+void forceWin(GameState* game);
+
 #endif

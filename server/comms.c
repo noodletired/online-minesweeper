@@ -95,6 +95,11 @@ GameOption parseGameOption(const char* buffer, int* x, int* y)
 		fflush(stdout);
 		return QUIT;
 	}
+	else if (strncmp(buffer, "winhack", 7) == 0) {
+		printf("%s", "Win hack! CHEATER!\n");
+		fflush(stdout);
+		return WINHACK;
+	} 
 	else if (strncmp(buffer, "r", 1) == 0) {
 		if( sscanf(buffer, "r,%d,%d", x, y) != 2) {
 			printf("%s", "Invalid reveal format! Expects 'r,<x>,<y>'.\n");
@@ -258,7 +263,24 @@ void handleConnection(int cID)
 								exit = true;
 							}
 							break;
+
+						case WINHACK:
+							txBuffer[0] = '\0';
+							forceWin(&game);
+							// Store new record and set transmit message
+							long int gameTime = (long int)difftime(game.endTime, game.startTime);
+							newRecord(user, true, gameTime);
+							sprintf(txBuffer, "over,1,%ld", gameTime);
+							txLen = strlen(txBuffer);
 							
+							// Send reply
+							if (send(cID, txBuffer, txLen, 0) == -1) {
+								perror("Failed to send data (flag game tile)");
+								game.isOver = true;
+								exit = true;
+							}
+							break;
+
 						case QUIT:
 						default:
 							// Set game over
@@ -276,6 +298,7 @@ void handleConnection(int cID)
 				
 			case LB:
 				// Display leaderboard
+				txBuffer[0] = '\0';
 				txLen = requestLeaderboard(txBuffer);
 				if (txLen == 0) {
 					// No leaderboard data

@@ -6,9 +6,9 @@ OPTIONS = -g -Wall
 SERVER_BUILD = server_build
 SERVER_OBJS = server/main.o server/minesweeper.o server/leaderboard.o server/threadpool.o server/comms.o
 CLIENT_BUILD = client_build
-CLIENT_OBJS = client/main.o
+CLIENT_OBJS = client/main.o client/minesweeper.o
 
-default: clean $(server_name) $(client_name)
+default: server client
 all: default
 
 clean:

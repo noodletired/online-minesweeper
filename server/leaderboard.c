@@ -82,6 +82,8 @@ void updateUser(const char* name, bool win, WinRecord* record)
 	
 	// Increment play count
 	user->plays++;
+	printf("Incremented playcount for %s\n", name);
+	fflush(stdout);
 	
 	// Stop here if loss
 	if (!win)
@@ -93,11 +95,16 @@ void updateUser(const char* name, bool win, WinRecord* record)
 	WinRecord* latest = user->records;
 	if (latest == NULL) {
 		user->records = record;
-		return;
 	}
-	while(latest->next != NULL)
-		latest = latest->next;
-	latest->next = record;
+	else {
+		while(latest->next != NULL)
+			latest = latest->next;
+		latest->next = record;
+	}
+
+	// Success
+	printf("Added new win record for %s\n", name);
+	fflush(stdout);
 }
 
 
@@ -107,11 +114,12 @@ void updateUser(const char* name, bool win, WinRecord* record)
 void newRecord(const char* name, bool win, long int time)
 {
 	// Lock
-	int err = pthread_mutex_lock(&lbLock);
+	pthread_mutex_lock(&lbLock);
 	
 	// First check if loss
 	if (!win) {
 		updateUser(name, win, NULL);
+		pthread_mutex_unlock(&lbLock); // remember to unlock the mutex!
 		return;
 	}
 	
@@ -128,7 +136,7 @@ void newRecord(const char* name, bool win, long int time)
 	updateUser(name, win, record);
 	
 	// Unlock
-	err = pthread_mutex_unlock(&lbLock);
+	pthread_mutex_unlock(&lbLock);
 }
 
 
@@ -137,13 +145,13 @@ void newRecord(const char* name, bool win, long int time)
 int requestLeaderboard(char* reply)
 {	
 	// Wait for reader lock
-	int err = pthread_mutex_lock(&rcLock);
+	pthread_mutex_lock(&rcLock);
 	readCounter++;
 	
 	// First reader must wait for and lock leaderboard, then unlock reader lock
 	if (readCounter == 1)
-		err = pthread_mutex_lock(&lbLock);
-	err = pthread_mutex_unlock(&rcLock)
+		pthread_mutex_lock(&lbLock);
+	pthread_mutex_unlock(&rcLock);
 		
 	
 	int replyLen = 0;
@@ -169,16 +177,16 @@ int requestLeaderboard(char* reply)
 	}
 	
 	// Wait for reader lock
-	err = pthread_mutex_lock(&rcLock);
+	pthread_mutex_lock(&rcLock);
 	readCounter--;
 	
 	// Last reader must unlock leaderboard
 	if (readCounter == 0)
-		err = pthread_mutex_unlock(&lbLock);
-	err = pthread_mutex_unlock(&rcLock)
+		pthread_mutex_unlock(&lbLock);
+	pthread_mutex_unlock(&rcLock);
 	
 	// Replace last , with 0
-	reply[replyLen] = 0;
+	reply[replyLen-1] = 0;
 	
 	return replyLen; // return size of reply
 }
